@@ -14,7 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      platforms: {
+        Row: {
+          base_url: string | null
+          color: string
+          created_at: string
+          id: string
+          logo: string
+          name: string
+        }
+        Insert: {
+          base_url?: string | null
+          color: string
+          created_at?: string
+          id: string
+          logo: string
+          name: string
+        }
+        Update: {
+          base_url?: string | null
+          color?: string
+          created_at?: string
+          id?: string
+          logo?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      price_data: {
+        Row: {
+          available: boolean
+          discount: number
+          id: string
+          last_updated: string
+          location_pincode: string | null
+          mrp: number
+          platform_id: string
+          price: number
+          price_change: number | null
+          product_id: string
+        }
+        Insert: {
+          available?: boolean
+          discount?: number
+          id?: string
+          last_updated?: string
+          location_pincode?: string | null
+          mrp: number
+          platform_id: string
+          price: number
+          price_change?: number | null
+          product_id: string
+        }
+        Update: {
+          available?: boolean
+          discount?: number
+          id?: string
+          last_updated?: string
+          location_pincode?: string | null
+          mrp?: number
+          platform_id?: string
+          price?: number
+          price_change?: number | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_data_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_data_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_history: {
+        Row: {
+          id: string
+          mrp: number
+          platform_id: string
+          price: number
+          product_id: string
+          recorded_at: string
+        }
+        Insert: {
+          id?: string
+          mrp: number
+          platform_id: string
+          price: number
+          product_id: string
+          recorded_at?: string
+        }
+        Update: {
+          id?: string
+          mrp?: number
+          platform_id?: string
+          price?: number
+          product_id?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          barcode: string
+          brand: string
+          category: string
+          created_at: string
+          id: string
+          image: string | null
+          name: string
+          size: string
+          updated_at: string
+        }
+        Insert: {
+          barcode: string
+          brand: string
+          category: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          name: string
+          size: string
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string
+          brand?: string
+          category?: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          name?: string
+          size?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scrape_logs: {
+        Row: {
+          error_message: string | null
+          id: string
+          platform_id: string | null
+          product_id: string | null
+          scraped_at: string
+          status: string
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          platform_id?: string | null
+          product_id?: string | null
+          scraped_at?: string
+          status: string
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          platform_id?: string | null
+          product_id?: string | null
+          scraped_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scrape_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
