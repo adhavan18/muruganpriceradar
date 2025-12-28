@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { LayoutGrid, List, RefreshCw, ArrowUpDown } from "lucide-react";
+import { LayoutGrid, List, RefreshCw, ArrowUpDown, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { PriceCard } from "@/components/PriceCard";
-import { Product, getCheapestPrice, platforms, formatCurrency } from "@/lib/mockData";
+import { Product, priceApi, getCheapestPrice, formatCurrency, Platform } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface PriceComparisonProps {
@@ -19,6 +19,11 @@ type ViewType = "cards" | "table";
 export function PriceComparison({ product, onRefresh, isRefreshing }: PriceComparisonProps) {
   const [sortBy, setSortBy] = useState<SortType>("price");
   const [viewType, setViewType] = useState<ViewType>("cards");
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
+
+  useEffect(() => {
+    priceApi.getPlatforms().then(setPlatforms);
+  }, []);
 
   const cheapest = getCheapestPrice(product);
 
@@ -32,10 +37,34 @@ export function PriceComparison({ product, onRefresh, isRefreshing }: PriceCompa
     return b.discount - a.discount;
   });
 
+  const getPlatform = (platformId: string) => platforms.find(p => p.id === platformId);
+
+  const getPlatformColor = (platformId: string) => {
+    const colors: Record<string, string> = {
+      blinkit: "bg-yellow-400 text-yellow-900",
+      zepto: "bg-purple-500 text-white",
+      swiggy: "bg-orange-500 text-white",
+      amazon: "bg-amber-500 text-black",
+      flipkart: "bg-blue-500 text-white",
+      bigbasket: "bg-green-500 text-white",
+      jiomart: "bg-red-500 text-white",
+      dmart: "bg-amber-700 text-white",
+    };
+    return colors[platformId] || "bg-gray-500 text-white";
+  };
+
   return (
     <div className="space-y-4">
       {/* Product Info */}
       <ProductCard product={product} />
+
+      {/* Location indicator */}
+      {product.prices[0]?.locationPincode && (
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <MapPin className="w-3 h-3" />
+          <span>Prices for pincode: {product.prices[0].locationPincode}</span>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -90,14 +119,21 @@ export function PriceComparison({ product, onRefresh, isRefreshing }: PriceCompa
             className="rounded-xl"
           >
             <RefreshCw className={cn("w-4 h-4 mr-1.5", isRefreshing && "animate-spin")} />
-            Refresh
+            {isRefreshing ? "Scraping..." : "Refresh"}
           </Button>
         </div>
       </div>
 
+      {/* No prices yet message */}
+      {sortedPrices.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>No prices available yet. Click "Refresh" to scrape current prices.</p>
+        </div>
+      )}
+
       {/* Price Cards */}
-      {viewType === "cards" && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {viewType === "cards" && sortedPrices.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sortedPrices.map((price, index) => (
             <PriceCard
               key={price.platformId}
@@ -110,7 +146,7 @@ export function PriceComparison({ product, onRefresh, isRefreshing }: PriceCompa
       )}
 
       {/* Table View */}
-      {viewType === "table" && (
+      {viewType === "table" && sortedPrices.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -129,7 +165,7 @@ export function PriceComparison({ product, onRefresh, isRefreshing }: PriceCompa
               </thead>
               <tbody>
                 {sortedPrices.map((price) => {
-                  const platform = platforms.find((p) => p.id === price.platformId);
+                  const platform = getPlatform(price.platformId);
                   const isCheapest = cheapest?.platformId === price.platformId && price.available;
                   
                   return (
@@ -145,16 +181,12 @@ export function PriceComparison({ product, onRefresh, isRefreshing }: PriceCompa
                           <div
                             className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm",
-                              price.platformId === "blinkit" && "bg-yellow-400 text-yellow-900",
-                              price.platformId === "zepto" && "bg-purple-500 text-white",
-                              price.platformId === "swiggy" && "bg-orange-500 text-white",
-                              price.platformId === "amazon" && "bg-amber-500 text-black",
-                              price.platformId === "flipkart" && "bg-blue-500 text-white"
+                              getPlatformColor(price.platformId)
                             )}
                           >
-                            {platform?.name.charAt(0)}
+                            {platform?.name.charAt(0) || price.platformId.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-medium">{platform?.name}</span>
+                          <span className="font-medium">{platform?.name || price.platformId}</span>
                           {isCheapest && (
                             <span className="deal-badge px-2 py-0.5 rounded-full text-xs">
                               Best
@@ -193,7 +225,7 @@ export function PriceComparison({ product, onRefresh, isRefreshing }: PriceCompa
 
       {/* Disclaimer */}
       <p className="text-xs text-muted-foreground text-center py-4">
-        Prices are indicative and may vary. Last updated just now.
+        Prices are scraped from platforms and may vary. Updated daily for Chennai 603103.
       </p>
     </div>
   );

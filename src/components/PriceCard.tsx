@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import { TrendingDown, TrendingUp, AlertCircle, Check, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlatformLogo } from "@/components/ui/PlatformLogo";
-import { PriceData, platforms, formatCurrency, formatTimeAgo } from "@/lib/mockData";
+import { PriceData, priceApi, formatCurrency, formatTimeAgo, Platform } from "@/lib/api";
+import { useState, useEffect } from "react";
 
 interface PriceCardProps {
   priceData: PriceData;
@@ -11,8 +12,13 @@ interface PriceCardProps {
 }
 
 export function PriceCard({ priceData, isCheapest, index }: PriceCardProps) {
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  
+  useEffect(() => {
+    priceApi.getPlatforms().then(setPlatforms);
+  }, []);
+  
   const platform = platforms.find((p) => p.id === priceData.platformId);
-  if (!platform) return null;
 
   return (
     <motion.div
